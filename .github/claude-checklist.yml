@@ -1,0 +1,39 @@
+checklist:
+  - name: "Data leakage check"
+    description: "Ensure there is no data leakage between training and test sets, and data splitting is done correctly."
+    severity: "high"
+
+  - name: "Model training reproducibility"
+    description: "Verify random seeds are set for NumPy, PyTorch, TensorFlow, etc., to make experiments reproducible."
+    severity: "medium"
+
+  - name: "Hardcoded paths or credentials"
+    description: "Check for absolute file paths, dataset paths, or API keys left in code."
+    pattern: "(?i)(/home/|C:\\\\|api[_-]?key|token|secret|password)"
+    severity: "high"
+
+  - name: "Improper data handling"
+    description: "Ensure data normalization, standardization, and missing value handling are properly implemented."
+    severity: "medium"
+
+  - name: "Model saving and loading"
+    description: "Confirm that model weights are saved securely and not committed to the repo (e.g., .pt, .h5, .pkl files)."
+    pattern: "(\\.pt|\\.pth|\\.h5|\\.pkl)"
+    severity: "high"
+
+  - name: "Use of deprecated or inefficient ML functions"
+    description: "Check for deprecated functions or inefficient loops over tensors that can be vectorized."
+    severity: "low"
+
+  - name: "Debug prints or unused code"
+    description: "Ensure debug prints, test code, and unused imports are removed before merging."
+    pattern: "(print\\(|pdb\\.set_trace|debugger;|import .* as .*test)"
+    severity: "low"
+
+  - name: "Experiment tracking"
+    description: "Check that experiments are logged properly (using wandb, mlflow, tensorboard, etc.)."
+    severity: "medium"
+
+  - name: "Documentation and comments"
+    description: "Ensure model architecture, preprocessing steps, and hyperparameters are properly commented."
+    severity: "medium"

@@ -1,0 +1,68 @@
+name: Claude ML Code Review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  ml_code_review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get PR diff
+        id: get_diff
+        run: |
+          git fetch origin main
+          git diff origin/main...HEAD > diff.txt
+
+      - name: Run Claude ML Review
+        id: run_claude
+        uses: anthropic/claude-github-action@v1
+        with:
+          api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: claude-3-5-sonnet
+          input: |
+            You are a senior machine learning code reviewer.
+            Review this pull request diff for the following aspects:
+            1. Machine learning correctness (no data leakage, proper model saving/loading)
+            2. Security and safety (no hardcoded paths, secrets, or large weight files)
+            3. Code quality (proper use of NumPy/Pandas/Torch, reproducibility)
+            4. Performance (avoid loops where vectorization works better)
+            5. Documentation and comments (important for research reproducibility)
+
+            Use this checklist to guide your review:
+            $(cat .github/claude-checklist.yml)
+
+            Then return a Markdown table with:
+            - ✅ PASS / ❌ FAIL per check
+            - Explanation for each
+            - A final summary section
+
+            --- PR DIFF START ---
+            $(cat diff.txt)
+            --- PR DIFF END ---
+
+      - name: Save Claude output
+        run: echo "${{ steps.run_claude.outputs.output }}" > claude_output.txt
+
+      - name: Post Claude Review Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('claude_output.txt', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+      - name: Block merge if issues found
+        run: |
+          if grep -q "FAIL" claude_output.txt; then
+            echo "ML code review failed — please address Claude's findings."
+            exit 1
+          fi

@@ -1,129 +1,65 @@
-# Wine Quality Classification
+# Wine quality classification
 
-![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-1.0+-orange.svg)
-![XGBoost](https://img.shields.io/badge/XGBoost-Latest-blue.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+A small scikit-learn project: predict whether a wine is "good" (quality 7 or
+higher) or not from its chemical measurements. I compared four classifiers and kept
+a random forest.
 
-Machine learning project comparing multiple classification algorithms to predict wine quality based on physicochemical properties.
+## Data
 
-## Overview
+`WineQT.csv`, 1,143 wines and 13 columns: 11 measurements (fixed acidity, volatile
+acidity, citric acid, residual sugar, chlorides, free and total sulfur dioxide,
+density, pH, sulphates, alcohol), the quality score, and an `Id` column. There are no
+missing values. The CSV is not in the repo; the notebook uploads it in Colab.
 
-This project tackles the wine quality classification problem using an ensemble approach. The model classifies wines as "good" (quality ≥ 7) or "bad" (quality < 7) based on 13 physicochemical features.
+## Approach
 
-## Features
-
-- Comparative analysis of 4 different ML algorithms
-- Comprehensive data exploration with correlation heatmaps
-- ROC-AUC evaluation for model selection
-- Feature importance analysis
-- Hyperparameter-tuned Random Forest model
-
-## Tech Stack
-
-- **Python 3.8+**
-- **scikit-learn** - Machine learning algorithms
-- **XGBoost** - Gradient boosting framework
-- **Pandas** - Data manipulation
-- **NumPy** - Numerical operations
-- **Matplotlib & Seaborn** - Data visualization
-
-## Dataset
-
-**Wine Quality Dataset**
-- 1,143 samples
-- 13 features (physicochemical properties)
-- Binary target: Quality ≥ 7 (Good) vs Quality < 7 (Bad)
-
-**Features:**
-- Fixed acidity
-- Volatile acidity
-- Citric acid
-- Residual sugar
-- Chlorides
-- Free/Total sulfur dioxide
-- Density
-- pH
-- Sulphates
-- Alcohol content
-
-## Models Compared
-
-| Algorithm | ROC-AUC (Validation) | Test Accuracy |
-|---|---|---|
-| Logistic Regression | 72.6% | - |
-| SVM (RBF Kernel) | 50.0% | - |
-| XGBoost | 74.8% | - |
-| **Random Forest** | **80.0%** | **91.3%** |
-
-**Winner:** Random Forest (selected as the best model)
-
-## Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/shreyasnimbalkar/wine-model.git
-cd wine-model
-```
-
-2. Install dependencies:
-```bash
-pip install pandas numpy scikit-learn xgboost matplotlib seaborn jupyter
-```
-
-3. Launch Jupyter Notebook:
-```bash
-jupyter notebook Untitled3.ipynb
-```
-
-## Usage
-
-Open and run the notebook:
-```python
-# Load the dataset
-df = pd.read_csv('WineQT.csv')
-
-# Train-test split (90-10)
-X_train, X_test, y_train, y_test = train_test_split(...)
-
-# Train Random Forest model
-rf_model.fit(X_train, y_train)
-
-# Evaluate
-accuracy = rf_model.score(X_test, y_test)
-```
+1. Look at the data: quality counts, volatile acidity and citric acid by quality, and
+   a correlation heatmap.
+2. Turn quality into a label: 1 if quality >= 7, else 0.
+3. Split 90/10 with `random_state=3` (1,028 training rows, 115 test rows).
+4. Train logistic regression, XGBoost, an RBF SVM and a random forest, and score each
+   with ROC-AUC on the test split.
+5. Retrain a random forest and report its accuracy on the same test split.
 
 ## Results
 
-- **Best Model:** Random Forest
-- **Test Accuracy:** 91.3%
-- **ROC-AUC Score:** 80.0%
-- **Train-Test Split:** 90-10
+ROC-AUC on the 115 test rows (computed from predicted labels, not probabilities):
 
-The Random Forest model significantly outperformed other algorithms, showing robust performance in distinguishing between good and bad quality wines.
+| Model | Train | Test |
+|---|---|---|
+| Logistic regression | 0.605 | 0.726 |
+| XGBoost | 1.000 | 0.748 |
+| SVM (RBF) | 0.500 | 0.500 |
+| Random forest | 1.000 | 0.800 |
 
-## Data Visualization
+The final random forest got 91.3% accuracy on the test split.
 
-The project includes:
-- Feature correlation heatmaps
-- Class distribution analysis
-- ROC-AUC comparison charts
-- Feature importance plots
+Things I would fix if I came back to it:
 
-## Contributing
+- Most wines are below 7, so accuracy flatters the model. ROC-AUC is the better
+  number to look at.
+- The `Id` column is left in as a feature. It should be dropped.
+- `MinMaxScaler` is imported but never used. The SVM probably scores 0.5 because the
+  features aren't scaled, so it predicts one class for everything.
+- XGBoost and the random forest score 1.0 on training data, so they overfit; a
+  cross-validated search over tree depth would help.
+- The notebook prints ROC-AUC under the label "Accuracy".
 
-Contributions are welcome! Feel free to:
-- Report bugs
-- Suggest new features
-- Submit pull requests
+## How to run
 
-## License
+The notebook was written for Google Colab (it uses `google.colab.files.upload()` to
+load the CSV). Open `Untitled3.ipynb` in Colab, run the cells, and upload `WineQT.csv`
+when asked.
 
-MIT License
+To run it locally instead, remove the upload cell, put `WineQT.csv` next to the
+notebook, and install:
 
-## Author
+```bash
+pip install pandas numpy matplotlib seaborn scikit-learn xgboost jupyter
+```
 
-**Shreyas Nimbalkar**
-- GitHub: [@shreyasnimbalkar](https://github.com/shreyasnimbalkar)
-- Email: shreyasgnimbalkarwork@gmail.com
-- LinkedIn: [Shreyas Nimbalkar](https://www.linkedin.com/in/shreyas-nimbalkar-713bb9267/)
+## Files
+
+- `Untitled3.ipynb`: the whole project, from loading the data to a single-wine
+  prediction at the end
+- `LICENSE`: MIT
